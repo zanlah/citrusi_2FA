@@ -35,5 +35,5 @@ jobs:
           docker pull ${{ secrets.DOCKER_USERNAME }}/citrusi_2fa:${{ github.sha }}
           docker stop citrusi_2fa || true
           docker rm citrusi_2fa || true
-          docker run --name citrusi_2fa -d -p 3000:3000 ${{ secrets.DOCKER_USERNAME }}/citrusi_2fa:${{ github.sha }}
+          docker run --name citrusi_2fa -d -p 5000:5000 ${{ secrets.DOCKER_USERNAME }}/citrusi_2fa:${{ github.sha }}
 
