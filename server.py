@@ -3,6 +3,10 @@ from werkzeug.utils import secure_filename
 from faceID import createModel, identifyFace
 app = Flask(__name__)
 
+@app.route('/ping', methods=['GET'])
+def ping():
+    return jsonify({'status': 'success', 'message': 'Server deluje!'}), 200
+
 
 @app.route('/create-model', methods=['POST'])
 def upload_video():
