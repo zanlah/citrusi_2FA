@@ -1,2 +1,6 @@
 Flask
 Werkzeug
+numpy
+cv2
+tensorflow
+PIL
