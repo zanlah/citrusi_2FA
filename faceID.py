@@ -1,6 +1,32 @@
+from PIL import Image
 import numpy as np
 import cv2 as cv
 import tensorflow as tf
+
+# Preprocesiranje slik predn grejo v augmentacijo
+def preprocess_images(image_paths, target_size = (64, 64)):
+    preprocessed_images = []
+    
+    for image_path in image_paths:
+        # Nalozi sliko
+        image = Image.open(image_path)
+        
+        # Spremeni velikost v prej doloceno
+        image = image.resize(target_size)
+        
+        # Pretvorimo v numpy tabelo
+        image_array = np.array(image)
+        
+        # Normaliziramo vrednosti v intervalu [0, 1]
+        image_array = image_array.astype('float32') / 255.0
+        
+        # Dodamo pre procesirano sliko v tabelo
+        preprocessed_images.append(image_array)
+        
+    # Pretvorimo tabelo v numpy tabelo
+    preprocessed_images = np.array(preprocessed_images)
+    
+    return preprocessed_images
 
 def random_rotation(images, max_angle=1):
     def rotate_and_fill(image):
