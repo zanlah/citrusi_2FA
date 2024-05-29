@@ -2,6 +2,7 @@ from PIL import Image
 import numpy as np
 import cv2 as cv
 import tensorflow as tf
+import math
 
 # Preprocesiranje slik predn grejo v augmentacijo
 def preprocess_images(image_paths, target_size = (64, 64)):
@@ -28,23 +29,89 @@ def preprocess_images(image_paths, target_size = (64, 64)):
     
     return preprocessed_images
 
+# ===================#
+# Nakljucna rotacija #
+# ===================#
+def getRotationMatrix2D(center_x, center_y, angle, scale=1.0):
+    # Pretvorimo kot iz radianov v stopinje
+    angle_degrees = angle * 180.0 / math.pi
+    
+    # Kalkuliramo sinus in kosinus kota
+    alpha = math.cos(angle_degrees * math.pi / 180.0)
+    beta = math.sin(angle_degrees * math.pi / 180.0)
+    
+    # Konstruiramo rotacijsko matriko
+    rotation_matrix = [
+        [alpha * scale, beta * scale, (1 - alpha) * center_x - beta * center_y],
+        [-beta * scale, alpha * scale, beta * center_x + (1 - alpha) * center_y]
+    ]
+    
+    return rotation_matrix
+
+def warpAffine(image, M, dsize):
+    height, width, channels = image.shape
+    output_height, output_width = dsize
+
+    # Kreiramo sliko za izhod z samimi niclami
+    output_image = []
+    for _ in range(height):
+        row = []
+        for _ in range(width):
+            pixel = [0] * channels
+            row.append(pixel)
+        output_image.append(row)
+
+    # Damo transformacijo na vsak piksel v izhodni sliki
+    for out_y in range(output_height):
+        for out_x in range(output_width):
+            # Mapiramo koordinate izhodnega piksla na koordinate piksla vhodne slike
+            in_x = M[0][0] * out_x + M[0][1] * out_y + M[0][2]
+            in_y = M[1][0] * out_x + M[1][1] * out_y + M[1][2]
+
+            # Zrcalimo sliko, da na robovih ni crno
+            x1, y1 = handle_border_reflect(in_x, in_y, width, height)
+            if 0 <= x1 < width and 0 <= y1 < height:
+                output_image[out_y][out_x] = image[y1][x1][:]            
+
+    return output_image
+
+def handle_border_reflect(x, y, width, height):
+    x = int(x)
+    y = int(y)
+
+    # Zrcaljenje x koordinat
+    if x < 0:
+        x = -x - 1
+    elif x >= width:
+        x = 2 * width - x - 1
+
+    # Zrcaljenje y koordinat
+    if y < 0:
+        y = -y - 1
+    elif y >= height:
+        y = 2 * height - y - 1
+
+    return x, y
+    
 def random_rotation(images, max_angle=1):
     def rotate_and_fill(image):
         # Pretvorimo kot iz radianov v stopinje za OpenCV
         angle = np.random.uniform(-max_angle, max_angle) * (180.0 / np.pi)
-        
+
         # Rotiramo sliko
-        height, width = image.shape[:2]
-        rotation_matrix = cv.getRotationMatrix2D((width / 2, height / 2), angle, 1.0)
+        height = image.shape[0]
+        width = image.shape[1]
+     
+        rotation_matrix = getRotationMatrix2D(round(width / 2), round(height / 2), round(angle), 1.0)
         
         # Izvedemo rotacijo
-        rotated_image = cv.warpAffine(image, rotation_matrix, (width, height), borderMode=cv.BORDER_REFLECT_101)
+        rotated_image = warpAffine(image, rotation_matrix, (width, height))
         return rotated_image
 
     # Rotiramo in zapolnimo prazne dele slike po rotaciji
     rotated_images = [rotate_and_fill(image) for image in images]
     
-    return np.array(rotated_images)
+    return rotated_images
 
 def random_brightness(images, max_delta=0.6):
     def adjust_brightness(image):
@@ -117,7 +184,7 @@ def augment_images(images):
             images = augmentation(images)
         else:
             images = augmentation(images)
-    return images
+    return np.array(images)
 
 def createModel(videoPath, userId):
     pass
