@@ -1,3 +1,7 @@
 Flask
 Werkzeug
+numpy
+opencv-python
+tensorflow
+Pillow
 math
