@@ -1,6 +1,6 @@
 Flask
 Werkzeug
 numpy
-cv2
+opencv-python
 tensorflow
-PIL
+Pillow
