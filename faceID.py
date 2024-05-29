@@ -3,6 +3,7 @@ import numpy as np
 import cv2 as cv
 import tensorflow as tf
 import math
+import random
 
 # Preprocesiranje slik predn grejo v augmentacijo
 def preprocess_images(image_paths, target_size = (64, 64)):
@@ -54,10 +55,10 @@ def warpAffine(image, M, dsize):
 
     # Kreiramo sliko za izhod z samimi niclami
     output_image = []
-    for _ in range(height):
+    for _ in range(output_height):
         row = []
-        for _ in range(width):
-            pixel = [0] * channels
+        for _ in range(output_width):
+            pixel = [0.0] * channels
             row.append(pixel)
         output_image.append(row)
 
@@ -71,7 +72,7 @@ def warpAffine(image, M, dsize):
             # Zrcalimo sliko, da na robovih ni crno
             x1, y1 = handle_border_reflect(in_x, in_y, width, height)
             if 0 <= x1 < width and 0 <= y1 < height:
-                output_image[out_y][out_x] = image[y1][x1][:]            
+                output_image[out_y][out_x] = image[y1][x1][:]
 
     return output_image
 
@@ -103,15 +104,16 @@ def random_rotation(images, max_angle=1):
         width = image.shape[1]
      
         rotation_matrix = getRotationMatrix2D(round(width / 2), round(height / 2), round(angle), 1.0)
-        
+
         # Izvedemo rotacijo
         rotated_image = warpAffine(image, rotation_matrix, (width, height))
+
         return rotated_image
 
     # Rotiramo in zapolnimo prazne dele slike po rotaciji
     rotated_images = [rotate_and_fill(image) for image in images]
     
-    return rotated_images
+    return np.array(rotated_images)
 
 def random_brightness(images, max_delta=0.6):
     def adjust_brightness(image):
@@ -130,28 +132,31 @@ def random_brightness(images, max_delta=0.6):
     
     return brightened_images
 
+#==================#
+# Nakljucni premik #
+#==================#
 def random_translation(images, max_dx=0.2, max_dy=0.2):
     def translate_image(image):
-        height, width = image.shape[:2]
-        
+        height, width, channels = image.shape
         # Izracunamo maksimalno stevilo pikslov za premik
         max_dx_pixels = int(max_dx * width)
         max_dy_pixels = int(max_dy * height)
         
         # Nakljucno izberemo stevilo pikslov za premik v x in y smeri
-        tx = np.random.randint(-max_dx_pixels, max_dx_pixels + 1)
-        ty = np.random.randint(-max_dy_pixels, max_dy_pixels + 1)
+        tx = random.randrange(-max_dx_pixels, max_dx_pixels + 1)
+        ty = random.randrange(-max_dy_pixels, max_dy_pixels + 1)
         
         # Naredimo matriko premika
-        translation_matrix = np.float32([[1, 0, tx], [0, 1, ty]])
+        translation_matrix = [[1, 0, tx], [0, 1, ty]]
         
         # Uporabimo matriko in naredimo premik
-        translated_image = cv.warpAffine(image, translation_matrix, (width, height), borderMode=cv.BORDER_REFLECT_101)
+        translated_image = warpAffine(image, translation_matrix, (width, height))
+        
         return translated_image
     
     # Naredimo premik sliki
     translated_images = [translate_image(image) for image in images]
-    
+
     return np.array(translated_images)
 
 def random_flip_horizontal(images):
@@ -165,11 +170,8 @@ def random_flip_horizontal(images):
     
     # Obrnemo sliko
     flipped_images = [flip_image(image) for image in images]
-    
-    # Pretvorimo tabelo v numpy tabelo
-    flipped_images = np.array([img for img in flipped_images])
-    
-    return flipped_images
+        
+    return np.array(flipped_images)
 
 augmentations = [
     random_rotation,
