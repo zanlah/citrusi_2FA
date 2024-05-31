@@ -223,7 +223,18 @@ def augment_images(images):
             images = augmentation(images)
         else:
             images = augmentation(images)
-    return images
+    
+    augmented_images = []
+    for image_array in images:
+        # Pretvorimo sliko nazaj na interval [0, 255]
+        image_array = (image_array * 255).astype('uint8')
+        
+        # Pretvorimo numpy tabelo v PIL sliko
+        image = Image.fromarray(image_array)
+        augmented_images.append(image)
+
+    return augmented_images
+
 
 def createModel(videoPath, userId):
     pass
