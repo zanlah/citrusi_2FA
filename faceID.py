@@ -115,22 +115,49 @@ def random_rotation(images, max_angle=1):
     
     return np.array(rotated_images)
 
+#====================#
+# Nakljucna svetlost #
+#====================#
+def random_value(min_val, max_val):
+    return min_val + random.random() * (max_val - min_val)
+
+def adjust_brightness(image, delta):
+    brightened_image = []
+    for row in image:
+        brightened_row = []
+        for pixel in row:
+            adjusted_pixel = [channel + delta for channel in pixel]
+            adjusted_pixel = [max(0.0, min(1.0, channel)) for channel in adjusted_pixel]
+            brightened_row.append(adjusted_pixel)
+        brightened_image.append(brightened_row)
+    return brightened_image
+
+def clip_pixel_values(brightened_image):
+    clipped_image = []
+    for row in brightened_image:
+        clipped_row = []
+        for pixel in row:
+            clipped_pixel = []
+            for channel in pixel:
+                clipped_channel = max(0.0, min(1.0, channel))
+                clipped_pixel.append(clipped_channel)
+            clipped_row.append(clipped_pixel)
+        clipped_image.append(clipped_row)
+    return clipped_image
+
 def random_brightness(images, max_delta=0.6):
-    def adjust_brightness(image):
+    def change_brightness(image):   
         # Dolocimo svetlost za nakljucni faktor na intervalu [-max_delta, max_delta]
-        delta = np.random.uniform(-max_delta, max_delta)
-        brightened_image = tf.image.adjust_brightness(image, delta)
+        delta = random_value(-max_delta, max_delta)
+        brightened_image = adjust_brightness(image, delta)
         # Vrednosti nastavimo na interval [0, 1]
-        brightened_image = tf.clip_by_value(brightened_image, 0.0, 1.0)
+        brightened_image = clip_pixel_values(brightened_image)
         return brightened_image
     
     # Posodobimo svetlost za vsako sliko
-    brightened_images = [adjust_brightness(image) for image in images]
-    
-    # Pretvorimo tabelo slik v numpy tabelo
-    brightened_images = np.array([img.numpy() for img in brightened_images])
-    
-    return brightened_images
+    brightened_images = [change_brightness(image) for image in images]
+        
+    return np.array(brightened_images)
 
 #==================#
 # Nakljucni premik #
@@ -186,7 +213,7 @@ def augment_images(images):
             images = augmentation(images)
         else:
             images = augmentation(images)
-    return np.array(images)
+    return images
 
 def createModel(videoPath, userId):
     pass
