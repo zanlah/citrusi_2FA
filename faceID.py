@@ -186,11 +186,21 @@ def random_translation(images, max_dx=0.2, max_dy=0.2):
 
     return np.array(translated_images)
 
+#===================================#
+# Nakljucna horizontalna preslikava #
+#===================================#
+def flip_image_horizontally(image):
+    flipped_image = []
+    for row in image:
+        flipped_row = row[::-1]
+        flipped_image.append(flipped_row)
+    return flipped_image
+
 def random_flip_horizontal(images):
     def flip_image(image):
         # Nakljucno izberemo ali obrnemo sliko
-        if np.random.rand() > 0.5:
-            flipped_image = tf.image.flip_left_right(image)
+        if random.random() > 0.5:
+            flipped_image = flip_image_horizontally(image)
         else:
             flipped_image = image
         return flipped_image
