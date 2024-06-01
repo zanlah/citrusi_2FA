@@ -5,11 +5,67 @@ import tensorflow as tf
 import math
 import random
 
+def convolution(image, kernel):
+    # Definiramo dimenzije slike in jedra
+    image_rows, image_cols = image.shape
+    kernel_rows, kernel_cols = kernel.shape
+    
+    # Nastavimo padding
+    padding_rows = kernel_rows // 2
+    padding_cols = kernel_cols // 2
+    
+    # Paddamo sliko z robnimi vrednostmi
+    padded_image = np.pad(image, ((padding_rows, padding_rows), (padding_cols, padding_cols)), mode='edge')
+    
+    # Inicializiramo tabelo v kateri bo koncni rezultat
+    convolution_result = [[0] * image_cols for _ in range(image_rows)]
+    
+    # Konvolucija
+    for i in range(image_rows):
+        for j in range(image_cols):
+            # Dobimo obmocje interesa iz paddane slike
+            region_of_interest = padded_image[i:i+kernel_rows, j:j+kernel_cols]
+            # Poskrbimo, da je obmocje interesa enak kot jedro
+            if region_of_interest.shape == kernel.shape:
+                convolution_result[i][j] = np.sum(region_of_interest * kernel)
+                    
+    # Poskrbimo, da so vrednosti med 0-255 za vsak kanal
+    convolution_result = np.clip(convolution_result, 0, 255).astype(np.uint8)
+                    
+    return convolution_result
+
 def gaussian_filter(image, sigma):
-    pass
+    # Velikost jedra
+    kernel_size = int((2 * sigma) * 2 + 1)
+    
+    # Ustvarimo prazno jedro
+    kernel = np.zeros((kernel_size, kernel_size))
+    
+    # Izracunamo jedro glede na gaussovo funkcijo
+    k = kernel_size // 2
+    for i in range(-k, k + 1):
+        for j in range(-k, k + 1):
+            kernel[i+k][j+k] = 1 / (2 * math.pi * sigma**2) * math.exp(-((i)**2 + (j)**2) / (2 * sigma**2))
+    
+    # Normalizacija jedra
+    kernel /= np.sum(kernel)
+    
+    # Uporaba funkcije konvolucije
+    gaussian_image = convolution(image, kernel)
+    
+    # Normalizacija rezultata
+    gaussian_image = (gaussian_image - np.min(gaussian_image)) / (np.max(gaussian_image) - np.min(gaussian_image)) * 255
+    
+    return gaussian_image.astype(np.uint8)
 
 def linearize_grayscale(image, gamma):
-    pass
+    # Uporabimo gamma korekcijo za linearizacijo sivinskih vrednosti
+    table = np.array([((i / 255.0) ** (1 / gamma)) * 255 for i in np.arange(0, 256)]).astype('uint8')
+    
+    # Uporabimo funkicjo za aplikacijo gamma korekcije na sliko s tabelo
+    linearized = cv.LUT(image, table)
+    
+    return linearized
 
 # Preprocesiranje slik predn grejo v augmentacijo
 def preprocess_images(image_paths, target_size):
@@ -249,6 +305,8 @@ def augment_images(images):
 
 
 def createModel(videoPath, userId):
+    # Najprej klices funkcijo preprocess_images. V argumente das poti do vseh slik npr. array: [faceid_images\0.png, faceid_images\1.png] in velikost v kero sliko pretvorimo npr. (64, 64)
+    # Pol se klice augment_images, tu nt pol das ka se returna od preprocess_images
     pass
 
 def identifyFace(imagePath, userId):
