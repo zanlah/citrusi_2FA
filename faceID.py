@@ -59,7 +59,13 @@ def gaussian_filter(image, sigma):
     return gaussian_image.astype(np.uint8)
 
 def linearize_grayscale(image, gamma):
-    pass
+    # Uporabimo gamma korekcijo za linearizacijo sivinskih vrednosti
+    table = np.array([((i / 255.0) ** (1 / gamma)) * 255 for i in np.arange(0, 256)]).astype('uint8')
+    
+    # Uporabimo funkicjo za aplikacijo gamma korekcije na sliko s tabelo
+    linearized = cv.LUT(image, table)
+    
+    return linearized
 
 # Preprocesiranje slik predn grejo v augmentacijo
 def preprocess_images(image_paths, target_size):
