@@ -35,7 +35,28 @@ def convolution(image, kernel):
     return convolution_result
 
 def gaussian_filter(image, sigma):
-    pass
+    # Velikost jedra
+    kernel_size = int((2 * sigma) * 2 + 1)
+    
+    # Ustvarimo prazno jedro
+    kernel = np.zeros((kernel_size, kernel_size))
+    
+    # Izracunamo jedro glede na gaussovo funkcijo
+    k = kernel_size // 2
+    for i in range(-k, k + 1):
+        for j in range(-k, k + 1):
+            kernel[i+k][j+k] = 1 / (2 * math.pi * sigma**2) * math.exp(-((i)**2 + (j)**2) / (2 * sigma**2))
+    
+    # Normalizacija jedra
+    kernel /= np.sum(kernel)
+    
+    # Uporaba funkcije konvolucije
+    gaussian_image = convolution(image, kernel)
+    
+    # Normalizacija rezultata
+    gaussian_image = (gaussian_image - np.min(gaussian_image)) / (np.max(gaussian_image) - np.min(gaussian_image)) * 255
+    
+    return gaussian_image.astype(np.uint8)
 
 def linearize_grayscale(image, gamma):
     pass
