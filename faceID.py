@@ -5,6 +5,35 @@ import tensorflow as tf
 import math
 import random
 
+def convolution(image, kernel):
+    # Definiramo dimenzije slike in jedra
+    image_rows, image_cols = image.shape
+    kernel_rows, kernel_cols = kernel.shape
+    
+    # Nastavimo padding
+    padding_rows = kernel_rows // 2
+    padding_cols = kernel_cols // 2
+    
+    # Paddamo sliko z robnimi vrednostmi
+    padded_image = np.pad(image, ((padding_rows, padding_rows), (padding_cols, padding_cols)), mode='edge')
+    
+    # Inicializiramo tabelo v kateri bo koncni rezultat
+    convolution_result = [[0] * image_cols for _ in range(image_rows)]
+    
+    # Konvolucija
+    for i in range(image_rows):
+        for j in range(image_cols):
+            # Dobimo obmocje interesa iz paddane slike
+            region_of_interest = padded_image[i:i+kernel_rows, j:j+kernel_cols]
+            # Poskrbimo, da je obmocje interesa enak kot jedro
+            if region_of_interest.shape == kernel.shape:
+                convolution_result[i][j] = np.sum(region_of_interest * kernel)
+                    
+    # Poskrbimo, da so vrednosti med 0-255 za vsak kanal
+    convolution_result = np.clip(convolution_result, 0, 255).astype(np.uint8)
+                    
+    return convolution_result
+
 def gaussian_filter(image, sigma):
     pass
 
