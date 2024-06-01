@@ -5,30 +5,42 @@ import tensorflow as tf
 import math
 import random
 
+def gaussian_filter(image, sigma):
+    pass
+
+def linearize_grayscale(image, gamma):
+    pass
+
 # Preprocesiranje slik predn grejo v augmentacijo
-def preprocess_images(image_paths, target_size = (64, 64)):
+def preprocess_images(image_paths, target_size):
     preprocessed_images = []
     
     for image_path in image_paths:
-        # Nalozi sliko
+        # Nalozimo sliko
         image = Image.open(image_path)
         
-        # Spremeni velikost v prej doloceno
+        # Spremenimo velikost slike
         image = image.resize(target_size)
         
-        # Pretvorimo v numpy tabelo
+        # Pretvorimo sliko v NumPy tabelo
         image_array = np.array(image)
         
-        # Normaliziramo vrednosti v intervalu [0, 1]
-        image_array = image_array.astype('float32') / 255.0
+        # Pretvorimo sliko v sivinske vrednosti
+        gray = cv.cvtColor(image_array, cv.COLOR_RGB2GRAY)
         
-        # Dodamo pre procesirano sliko v tabelo
-        preprocessed_images.append(image_array)
+        # Odstranimo sum iz slike
+        denoised_image = gaussian_filter(gray, 2.2)
         
-    # Pretvorimo tabelo v numpy tabelo
-    preprocessed_images = np.array(preprocessed_images)
+        # Lineariziramo sivinske vrednosti
+        linearized_image = linearize_grayscale(denoised_image, 2.2)
+        
+        # Normaliziramo slikovne pike na interval [0, 1]
+        normalized_image = linearized_image.astype('float32') / 255.0
+        
+        # Dodamo predprocesirano sliko v seznam
+        preprocessed_images.append(normalized_image)
     
-    return preprocessed_images
+    return np.array(preprocessed_images)
 
 # ===================#
 # Nakljucna rotacija #
