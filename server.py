@@ -1,7 +1,9 @@
 from flask import Flask, request, jsonify
 from werkzeug.utils import secure_filename
 from faceID import createModel, identifyFace
+from flask_cors import CORS
 app = Flask(__name__)
+CORS(app)
 
 @app.route('/ping', methods=['GET'])
 def ping():
@@ -28,19 +30,22 @@ def upload_video():
 
 @app.route('/check-face', methods=['POST'])
 def upload_image():
-    image = request.files['image']
-    user_id = request.form['userId']
+    print("Headers:", request.headers)
+    print("Content-Type:", request.content_type)
+    print("Data Size:", len(request.data))  # Check if any data is coming through
+    print("Files:", request.files)
+
+    user_id = request.form.get('userId')
+    image = request.files.get('image')
     if image and user_id:
         filename = secure_filename(image.filename)
+        save_path = f'./files/images/{filename}'
+        image.save(save_path)  # Save the streamed image
 
-         #shrani sliko v mapo files/images, iz koder ga lahko referenciraš
-        image.save(f'./files/images/{filename}')
+        # Function to check the face
+        #identifyFace(save_path, user_id)  # Assuming this function processes the image and returns some result
 
-        #funkcija kjer se preveri obraz
-        identifyFace(f'./files/images/{filename}', user_id)
-
-
-        return jsonify({'status': 'success', 'message': 'Image uploaded successfully'}), 200
+        return jsonify({'status': 'success', 'message': 'Image uploaded and processed successfully'}), 200
     else:
         return jsonify({'status': 'error', 'message': 'Missing image or userId'}), 400
 
