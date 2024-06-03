@@ -1,7 +1,9 @@
+import os
 from flask import Flask, request, jsonify
 from werkzeug.utils import secure_filename
 from faceID import createModel, identifyFace
 from flask_cors import CORS
+from datetime import datetime
 app = Flask(__name__)
 CORS(app)
 
@@ -16,10 +18,15 @@ def upload_video():
     user_id = request.form['userId']
     if video and user_id:
         filename = secure_filename(video.filename)
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        directory = f'./files/{user_id}/register/'
 
-        #shrani video v mapo files/videos, iz koder ga lahko referenciraš
-        video.save(f'./files/videos/{filename}')
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        filepath = os.path.join(directory, f'{timestamp}_{filename}')
+        video.save(filepath)
 
+        createModel(filepath, user_id)
         #funkcija kjer se ustvari model
         createModel(f'./files/videos/{filename}', user_id)
         return jsonify({'status': 'success', 'message': 'Video uploaded successfully'}), 200
@@ -30,18 +37,16 @@ def upload_video():
 
 @app.route('/check-face', methods=['POST'])
 def upload_image():
-    print("Headers:", request.headers)
-    print("Content-Type:", request.content_type)
-    print("Data Size:", len(request.data))  # Check if any data is coming through
-    print("Files:", request.files)
-
     user_id = request.form.get('userId')
     image = request.files.get('image')
     if image and user_id:
         filename = secure_filename(image.filename)
-        save_path = f'./files/images/{filename}'
-        image.save(save_path)  # Save the streamed image
-
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        directory = f'./files/{user_id}/login/'
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        filepath = os.path.join(directory, f'{timestamp}_{filename}')
+        image.save(filepath)
         # Function to check the face
         #identifyFace(save_path, user_id)  # Assuming this function processes the image and returns some result
 
