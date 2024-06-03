@@ -372,5 +372,14 @@ def identifyFace(imagePath, userId):
     # TODO (popravi pot do modela)
     model = tf.keras.models.load_model(f'models/{userId}_model.h5')
 
+    # Predprocesiranje slike na enak način kot pri učenju
+    image = Image.open(imagePath)
+    image = image.resize((64, 64))
+    image_array = np.array(image)
+    gray = cv2.cvtColor(image_array, cv2.COLOR_RGB2GRAY)
+    denoised_image = gaussian_filter(gray, 2.2)
+    linearized_image = linearize_grayscale(denoised_image, 2.2)
+    normalized_image = linearized_image.astype('float32') / 255.0
+    input_image = np.expand_dims(normalized_image, axis=0)
 
     pass
