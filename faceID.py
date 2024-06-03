@@ -337,6 +337,12 @@ def buildModel(input_shape):
 def createModel(videoPath, userId):
     # Najprej klices funkcijo preprocess_images. V argumente das poti do vseh slik npr. array: [faceid_images\0.png, faceid_images\1.png] in velikost v kero sliko pretvorimo npr. (64, 64)
     # Pol se klice augment_images, tu nt pol das ka se returna od preprocess_images
+
+    # Pozitivne slike enega uporabnika (slike dobimo iz videa in jih podamo v funkcijo za predprocesiranje)
+    # Nato še vse slika augmentiramo
+    positive_images = preprocess_images(positive_images, target_size=(64, 64))
+    augmented_positive_images = augment_images(positive_images)
+
     pass
 
 def identifyFace(imagePath, userId):
