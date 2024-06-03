@@ -343,6 +343,10 @@ def createModel(videoPath, userId):
     positive_images = preprocess_images(positive_images, target_size=(64, 64))
     augmented_positive_images = augment_images(positive_images)
 
+    # Negativne slike ostalih obrazov ter augmentacija negativnih slik
+    negative_images = preprocess_images(negative_image_paths, target_size=(64, 64))
+    augmented_negative_images = augment_images(negative_images)
+
     pass
 
 def identifyFace(imagePath, userId):
