@@ -318,6 +318,14 @@ def buildModel(input_shape):
     x = layers.Conv2D(128, (3, 3), activation='relu', padding='same')(x)
     x = layers.MaxPooling2D((2, 2))(x)
 
+    x = layers.Flatten()(x)
+
+    # Gosto povezane plasti
+    x = layers.Dense(256, activation='relu')(x)
+    x = layers.Dropout(0.2)(x)
+    x = layers.Dense(128, activation='relu')(x)
+    x = layers.Dropout(0.5)(x)
+
     return model
 
 def createModel(videoPath, userId):
