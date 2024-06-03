@@ -356,6 +356,11 @@ def createModel(videoPath, userId):
     input_shape = X_train.shape[1:]
     model = buildModel(input_shape)
 
+    # Compile model
+    # Uporabljamo binary_crossentropy ker lahko slika samo pripada uporabniku ali ne
+    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+    model.fit(X_train, y_train, epochs=10, batch_size=32)
+
     pass
 
 def identifyFace(imagePath, userId):
