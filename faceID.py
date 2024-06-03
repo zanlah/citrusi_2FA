@@ -304,6 +304,9 @@ def augment_images(images):
     return augmented_images
 
 
+#======================================#
+# Izdelava modela za prepoznavo obraza #
+#======================================#
 def createModel(videoPath, userId):
     # Najprej klices funkcijo preprocess_images. V argumente das poti do vseh slik npr. array: [faceid_images\0.png, faceid_images\1.png] in velikost v kero sliko pretvorimo npr. (64, 64)
     # Pol se klice augment_images, tu nt pol das ka se returna od preprocess_images
