@@ -308,6 +308,15 @@ def augment_images(images):
 # Izdelava modela za prepoznavo obraza #
 #======================================#
 def buildModel(input_shape):
+    inputs = layer.Input(shape=input_shape) # Definicija vhoda za model
+
+    # Konvolucijske plasti
+    x = layers.Conv2D(32, (3, 3), activation='relu', padding='same')(inputs)
+    x = layers.MaxPooling2D((2, 2))(x)
+    x = layers.Conv2D(64, (3, 3), activation='relu', padding='same')(x)
+    x = layers.MaxPooling2D((2, 2))(x)
+    x = layers.Conv2D(128, (3, 3), activation='relu', padding='same')(x)
+    x = layers.MaxPooling2D((2, 2))(x)
 
     return model
 
