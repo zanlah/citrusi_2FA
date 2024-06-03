@@ -352,6 +352,10 @@ def createModel(videoPath, userId):
     X_train = augmented_positive_images + augmented_negative_images
     y_train = np.concatenate((np.ones(len(augmented_positive_images)), np.zeros(len(augmented_negative_images))))
 
+    # Model build
+    input_shape = X_train.shape[1:]
+    model = buildModel(input_shape)
+
     pass
 
 def identifyFace(imagePath, userId):
