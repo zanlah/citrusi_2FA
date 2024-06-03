@@ -347,6 +347,11 @@ def createModel(videoPath, userId):
     negative_images = preprocess_images(negative_image_paths, target_size=(64, 64))
     augmented_negative_images = augment_images(negative_images)
 
+    # Združimo pozitivne in negativne slike v podatke za treniranje
+    # Pozitivne slike imajo label 1, negativne slike imajo label 0
+    X_train = augmented_positive_images + augmented_negative_images
+    y_train = np.concatenate((np.ones(len(augmented_positive_images)), np.zeros(len(augmented_negative_images))))
+
     pass
 
 def identifyFace(imagePath, userId):
