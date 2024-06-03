@@ -4,3 +4,4 @@ numpy
 opencv-python
 tensorflow
 Pillow
+flask_cors
