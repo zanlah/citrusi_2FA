@@ -361,6 +361,10 @@ def createModel(videoPath, userId):
     model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
     model.fit(X_train, y_train, epochs=10, batch_size=32)
 
+    # Shranjevanje modela
+    # TODO (popravi shranjevanje na pravo lokacijo)
+    model.save(f'models/{userId}_model.h5')
+
     pass
 
 def identifyFace(imagePath, userId):
