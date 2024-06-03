@@ -368,4 +368,9 @@ def createModel(videoPath, userId):
     pass
 
 def identifyFace(imagePath, userId):
+    # Nalaganje uporabnikovega model
+    # TODO (popravi pot do modela)
+    model = tf.keras.models.load_model(f'models/{userId}_model.h5')
+
+
     pass
