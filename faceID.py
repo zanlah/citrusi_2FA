@@ -382,4 +382,9 @@ def identifyFace(imagePath, userId):
     normalized_image = linearized_image.astype('float32') / 255.0
     input_image = np.expand_dims(normalized_image, axis=0)
 
+    # Ali je oseba prava ali ne
+    prediction = model.predict(input_image)[0][0]
+    
+    return predict
+
     pass
