@@ -329,6 +329,9 @@ def buildModel(input_shape):
     # Izhodna plast (sigmoidna za binarno klasifikacijo)
     outputs = layers.Dense(1, activation='sigmoid')(x)
 
+    # Definiramo model
+    model = models.Model(inputs=inputs, outputs=outputs)
+
     return model
 
 def createModel(videoPath, userId):
