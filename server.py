@@ -1,16 +1,35 @@
 import os
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory, abort
 from werkzeug.utils import secure_filename
 from faceID import createModel, identifyFace
 from flask_cors import CORS
 from datetime import datetime
-app = Flask(__name__)
+
+app = Flask(__name__, static_folder='files')
+
 CORS(app)
+
 
 @app.route('/ping', methods=['GET'])
 def ping():
     return jsonify({'status': 'success', 'message': 'Server deluje!'}), 200
 
+@app.route('/file/<path:filename>')
+def serve_image(filename):
+    # preverim ali je pot do datoteke veljavna
+    if '..' in filename or filename.startswith('/'):
+        abort(404)  # vrne 404 če je pot neveljavna
+
+    # zgradimo pot do datoteke
+    image_directory = app.static_folder  # 'files'
+    full_path = os.path.join(image_directory, filename)
+    
+    # preverim ali datoteka obstaja
+    if not os.path.isfile(full_path):
+        abort(404)  #vrnemo 404 če datoteka ne obstaja
+    
+    # posljem datoteko
+    return send_from_directory(image_directory, filename)
 
 @app.route('/create-model', methods=['POST'])
 def upload_video():
