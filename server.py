@@ -14,17 +14,18 @@ def ping():
 
 @app.route('/create-model', methods=['POST'])
 def upload_video():
-    video = request.files['video']
-    user_id = request.form['userId']
-    if video and user_id:
-        filename = secure_filename(video.filename)
-        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-        directory = f'./files/{user_id}/register/'
+    user_id = request.form.get('userId')
+    videos = request.files.getlist('video')
+    if videos and user_id:
+        for video in videos:
+            filename = secure_filename(video.filename)
+            timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+            directory = f'./files/{user_id}/register/'
 
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-        filepath = os.path.join(directory, f'{timestamp}_{filename}')
-        video.save(filepath)
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+            filepath = os.path.join(directory, f'{timestamp}_{filename}')
+            video.save(filepath)
 
         createModel(filepath, user_id)
         #funkcija kjer se ustvari model
