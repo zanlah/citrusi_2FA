@@ -384,7 +384,10 @@ def identifyFace(imagePath, userId):
 
     # Ali je oseba prava ali ne
     prediction = model.predict(input_image)[0][0]
-    
-    return predict
+
+    if prediction > 0.6:
+        return True
+    else:
+        return False
 
     pass
