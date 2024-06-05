@@ -302,7 +302,34 @@ def augment_images(images):
         augmented_images.append(image)
 
     return augmented_images
+    
+def cut_videos(videoPaths):
+    frames = []
 
+    for video_path in videoPaths:
+        # Zajamemo video
+        cap = cv.VideoCapture(video_path)
+        
+        while True:
+            # Beremo vsako sliko oz. frame
+            ret, frame = cap.read()
+            
+            # Ce je slika zadnja ali napaka
+            if not ret:
+                break
+            
+            # Pretvorimo v RGB format
+            frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
+            
+            # Dodamo v tabelo
+            frames.append(frame)
+        
+        # Sprostimo objekt
+        cap.release()
+    
+    # Pretvorimo v np tabelo
+    frames_array = np.array(frames)
+    return frames_array
 
 def createModel(videoPath, userId):
     # Najprej klices funkcijo preprocess_images. V argumente das poti do vseh slik npr. array: [faceid_images\0.png, faceid_images\1.png] in velikost v kero sliko pretvorimo npr. (64, 64)
