@@ -67,35 +67,41 @@ def linearize_grayscale(image, gamma):
     
     return linearized
 
-# Preprocesiranje slik predn grejo v augmentacijo
-def preprocess_images(image_paths, target_size):
+def preprocess(frame, target_size):
+    # Spremenimo velikost slike
+    image = frame.resize(target_size)
+    
+    # Pretvorimo sliko v NumPy tabelo
+    image_array = np.array(image)
+    
+    # Pretvorimo sliko v sivinske vrednosti
+    gray = cv.cvtColor(image_array, cv.COLOR_RGB2GRAY)
+    
+    # Odstranimo sum iz slike
+    denoised_image = gaussian_filter(gray, 1.5)
+    
+    # Lineariziramo sivinske vrednosti
+    linearized_image = linearize_grayscale(denoised_image, 1.5)
+            
+    return linearized_image
+
+# Preprocesiranje slik oz. framov preden gredo v augmentacijo
+def preprocess_frames(frames, target_size):
     preprocessed_images = []
     
-    for image_path in image_paths:
-        # Nalozimo sliko
-        image = Image.open(image_path)
-        
-        # Spremenimo velikost slike
-        image = image.resize(target_size)
-        
-        # Pretvorimo sliko v NumPy tabelo
-        image_array = np.array(image)
-        
-        # Pretvorimo sliko v sivinske vrednosti
-        gray = cv.cvtColor(image_array, cv.COLOR_RGB2GRAY)
-        
-        # Odstranimo sum iz slike
-        denoised_image = gaussian_filter(gray, 2.2)
-        
-        # Lineariziramo sivinske vrednosti
-        linearized_image = linearize_grayscale(denoised_image, 2.2)
-        
-        # Normaliziramo slikovne pike na interval [0, 1]
-        normalized_image = linearized_image.astype('float32') / 255.0
-        
-        # Dodamo predprocesirano sliko v seznam
-        preprocessed_images.append(normalized_image)
-    
+    for frame in frames:
+        if isinstance(frame, np.ndarray):
+            # Ce je slika iz videa oz. frame (NumPy array)
+            image = Image.fromarray(frame)
+            normalized_image = preprocess(image, target_size)
+            preprocessed_images.append(normalized_image)
+
+        else:
+            # Ce je slika iz prijave (image path)
+            image = Image.open(frame)
+            normalized_image = preprocess(image, target_size)
+            preprocessed_images.append(normalized_image)
+
     return np.array(preprocessed_images)
 
 # ===================#
@@ -118,29 +124,23 @@ def getRotationMatrix2D(center_x, center_y, angle, scale=1.0):
     return rotation_matrix
 
 def warpAffine(image, M, dsize):
-    height, width, channels = image.shape
+    height, width = image.shape
     output_height, output_width = dsize
 
-    # Kreiramo sliko za izhod z samimi niclami
-    output_image = []
-    for _ in range(output_height):
-        row = []
-        for _ in range(output_width):
-            pixel = [0.0] * channels
-            row.append(pixel)
-        output_image.append(row)
+    # Create an output image filled with zeros
+    output_image = np.zeros((output_height, output_width), dtype=image.dtype)
 
-    # Damo transformacijo na vsak piksel v izhodni sliki
+    # Apply the transformation to each pixel in the output image
     for out_y in range(output_height):
         for out_x in range(output_width):
-            # Mapiramo koordinate izhodnega piksla na koordinate piksla vhodne slike
+            # Map the output pixel coordinates to the input pixel coordinates
             in_x = M[0][0] * out_x + M[0][1] * out_y + M[0][2]
             in_y = M[1][0] * out_x + M[1][1] * out_y + M[1][2]
 
-            # Zrcalimo sliko, da na robovih ni crno
+            # Reflect the image at the borders to avoid black edges
             x1, y1 = handle_border_reflect(in_x, in_y, width, height)
             if 0 <= x1 < width and 0 <= y1 < height:
-                output_image[out_y][out_x] = image[y1][x1][:]
+                output_image[out_y, out_x] = image[y1, x1]
 
     return output_image
 
@@ -190,14 +190,8 @@ def random_value(min_val, max_val):
     return min_val + random.random() * (max_val - min_val)
 
 def adjust_brightness(image, delta):
-    brightened_image = []
-    for row in image:
-        brightened_row = []
-        for pixel in row:
-            adjusted_pixel = [channel + delta for channel in pixel]
-            adjusted_pixel = [max(0.0, min(1.0, channel)) for channel in adjusted_pixel]
-            brightened_row.append(adjusted_pixel)
-        brightened_image.append(brightened_row)
+    brightened_image = image + delta * 255
+    brightened_image = clip_pixel_values(brightened_image)
     return brightened_image
 
 def clip_pixel_values(brightened_image):
@@ -205,21 +199,16 @@ def clip_pixel_values(brightened_image):
     for row in brightened_image:
         clipped_row = []
         for pixel in row:
-            clipped_pixel = []
-            for channel in pixel:
-                clipped_channel = max(0.0, min(1.0, channel))
-                clipped_pixel.append(clipped_channel)
+            clipped_pixel = max(0, min(255, pixel))
             clipped_row.append(clipped_pixel)
         clipped_image.append(clipped_row)
     return clipped_image
 
 def random_brightness(images, max_delta=0.6):
-    def change_brightness(image):   
+    def change_brightness(image):
         # Dolocimo svetlost za nakljucni faktor na intervalu [-max_delta, max_delta]
         delta = random_value(-max_delta, max_delta)
         brightened_image = adjust_brightness(image, delta)
-        # Vrednosti nastavimo na interval [0, 1]
-        brightened_image = clip_pixel_values(brightened_image)
         return brightened_image
     
     # Posodobimo svetlost za vsako sliko
@@ -232,7 +221,7 @@ def random_brightness(images, max_delta=0.6):
 #==================#
 def random_translation(images, max_dx=0.2, max_dy=0.2):
     def translate_image(image):
-        height, width, channels = image.shape
+        height, width = image.shape
         # Izracunamo maksimalno stevilo pikslov za premik
         max_dx_pixels = int(max_dx * width)
         max_dy_pixels = int(max_dy * height)
@@ -281,7 +270,7 @@ def random_flip_horizontal(images):
 augmentations = [
     random_rotation,
     random_brightness,
-    random_translation,
+    random_translation, 
     random_flip_horizontal
 ]
 
@@ -291,18 +280,31 @@ def augment_images(images):
             images = augmentation(images)
         else:
             images = augmentation(images)
+    return images
     
-    augmented_images = []
-    for image_array in images:
-        # Pretvorimo sliko nazaj na interval [0, 255]
-        image_array = (image_array * 255).astype('uint8')
+def cut_videos(videoPaths):
+    frames = []
+
+    for video_path in videoPaths:
+        # Zajamemo video
+        cap = cv.VideoCapture(video_path)
         
-        # Pretvorimo numpy tabelo v PIL sliko
-        image = Image.fromarray(image_array)
-        augmented_images.append(image)
-
-    return augmented_images
-
+        while True:
+            # Beremo vsako sliko oz. frame
+            ret, frame = cap.read()
+            
+            # Ce je slika zadnja ali napaka
+            if not ret:
+                break
+            
+            # Dodamo v tabelo
+            frames.append(frame)
+        
+        # Sprostimo objekt
+        cap.release()
+    
+    # Pretvorimo v np tabelo
+    return np.array(frames)
 
 #======================================#
 # Izdelava modela za prepoznavo obraza #
@@ -335,59 +337,19 @@ def buildModel(input_shape):
     return model
 
 def createModel(videoPath, userId):
-    # Najprej klices funkcijo preprocess_images. V argumente das poti do vseh slik npr. array: [faceid_images\0.png, faceid_images\1.png] in velikost v kero sliko pretvorimo npr. (64, 64)
-    # Pol se klice augment_images, tu nt pol das ka se returna od preprocess_images
-
-    # Pozitivne slike enega uporabnika (slike dobimo iz videa in jih podamo v funkcijo za predprocesiranje)
-    # Nato še vse slika augmentiramo
-    positive_images = preprocess_images(positive_images, target_size=(64, 64))
-    augmented_positive_images = augment_images(positive_images)
-
-    # Negativne slike ostalih obrazov ter augmentacija negativnih slik
-    negative_images = preprocess_images(negative_image_paths, target_size=(64, 64))
-    augmented_negative_images = augment_images(negative_images)
-
-    # Združimo pozitivne in negativne slike v podatke za treniranje
-    # Pozitivne slike imajo label 1, negativne slike imajo label 0
-    X_train = augmented_positive_images + augmented_negative_images
-    y_train = np.concatenate((np.ones(len(augmented_positive_images)), np.zeros(len(augmented_negative_images))))
-
-    # Model build
-    input_shape = X_train.shape[1:]
-    model = buildModel(input_shape)
-
-    # Compile model
-    # Uporabljamo binary_crossentropy ker lahko slika samo pripada uporabniku ali ne
-    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
-    model.fit(X_train, y_train, epochs=10, batch_size=32)
-
-    # Shranjevanje modela
-    # TODO (popravi shranjevanje na pravo lokacijo)
-    model.save(f'models/{userId}_model.h5')
-
+    frames_array = cut_videos(videoPath)
+    
+    target_size = (64, 64)
+    preprocessed_images = preprocess_frames(frames_array, target_size)
+    
+    augmented_images = augment_images(preprocessed_images)
+    
     pass
 
 def identifyFace(imagePath, userId):
-    # Nalaganje uporabnikovega model
-    # TODO (popravi pot do modela)
-    model = tf.keras.models.load_model(f'models/{userId}_model.h5')
-
-    # Predprocesiranje slike na enak način kot pri učenju
-    image = Image.open(imagePath)
-    image = image.resize((64, 64))
-    image_array = np.array(image)
-    gray = cv2.cvtColor(image_array, cv2.COLOR_RGB2GRAY)
-    denoised_image = gaussian_filter(gray, 2.2)
-    linearized_image = linearize_grayscale(denoised_image, 2.2)
-    normalized_image = linearized_image.astype('float32') / 255.0
-    input_image = np.expand_dims(normalized_image, axis=0)
-
-    # Ali je oseba prava ali ne
-    prediction = model.predict(input_image)[0][0]
-
-    if prediction > 0.6:
-        return True
-    else:
-        return False
-
+    target_size = (64, 64)
+    preprocessed_images = preprocess_frames(imagePath, target_size)
+    
+    augmented_images = augment_images(preprocessed_images)
+    
     pass
