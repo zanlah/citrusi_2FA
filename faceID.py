@@ -306,6 +306,36 @@ def cut_videos(videoPaths):
     # Pretvorimo v np tabelo
     return np.array(frames)
 
+#======================================#
+# Izdelava modela za prepoznavo obraza #
+#======================================#
+def buildModel(input_shape):
+    inputs = layer.Input(shape=input_shape) # Definicija vhoda za model
+
+    # Konvolucijske plasti
+    x = layers.Conv2D(32, (3, 3), activation='relu', padding='same')(inputs)
+    x = layers.MaxPooling2D((2, 2))(x)
+    x = layers.Conv2D(64, (3, 3), activation='relu', padding='same')(x)
+    x = layers.MaxPooling2D((2, 2))(x)
+    x = layers.Conv2D(128, (3, 3), activation='relu', padding='same')(x)
+    x = layers.MaxPooling2D((2, 2))(x)
+
+    x = layers.Flatten()(x)
+
+    # Gosto povezane plasti
+    x = layers.Dense(256, activation='relu')(x)
+    x = layers.Dropout(0.2)(x)
+    x = layers.Dense(128, activation='relu')(x)
+    x = layers.Dropout(0.5)(x)
+
+    # Izhodna plast (sigmoidna za binarno klasifikacijo)
+    outputs = layers.Dense(1, activation='sigmoid')(x)
+
+    # Definiramo model
+    model = models.Model(inputs=inputs, outputs=outputs)
+
+    return model
+
 def createModel(videoPath, userId):
     frames_array = cut_videos(videoPath)
     
