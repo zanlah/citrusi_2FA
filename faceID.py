@@ -338,12 +338,32 @@ def buildModel(input_shape):
 
 def createModel(videoPath, userId):
     frames_array = cut_videos(videoPath)
-    
+
     target_size = (64, 64)
-    preprocessed_images = preprocess_frames(frames_array, target_size)
+
+    positive_images = preprocess_frames(frames_array, target_size)
+    augmented_positive_images = augment_images(positive_images)
+
+    negative_images = preprocess_images(negative_image_paths, target_size=(64, 64))
+    augmented_negative_images = augment_images(negative_images)
     
-    augmented_images = augment_images(preprocessed_images)
-    
+    # Združimo pozitivne in negativne slike v podatke za treniranje
+    # Pozitivne slike imajo label 1, negativne slike imajo label 0
+    X_train = augmented_positive_images + augmented_negative_images
+    y_train = np.concatenate((np.ones(len(augmented_positive_images)), np.zeros(len(augmented_negative_images))))
+
+    # Model build
+    input_shape = X_train.shape[1:]
+    model = buildModel(input_shape)
+
+    # Compile model
+    # Uporabljamo binary_crossentropy ker lahko slika samo pripada uporabniku ali ne
+    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+    model.fit(X_train, y_train, epochs=10, batch_size=32)
+
+    # Shranjevanje modela
+    model.save(f'./files/{userId}/{userId}_model.h5')
+
     pass
 
 def identifyFace(imagePath, userId):
@@ -351,5 +371,14 @@ def identifyFace(imagePath, userId):
     preprocessed_images = preprocess_frames(imagePath, target_size)
     
     augmented_images = augment_images(preprocessed_images)
+
+    model = tf.keras.models.load_model(f'./files/{userId}/{userId}_model.h5')
+
+    prediction = model.predict(augment_images)[0][0]
+
+    if prediction > 0.5:
+        return True
+    else:
+        return False
     
     pass
