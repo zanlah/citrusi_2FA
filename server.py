@@ -40,15 +40,16 @@ def upload_video():
             filename = secure_filename(video.filename)
             timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
             directory = f'./files/{user_id}/register/'
+            directory_negative_images = f'./negative_images/'
 
             if not os.path.exists(directory):
                 os.makedirs(directory)
             filepath = os.path.join(directory, f'{timestamp}_{filename}')
             video.save(filepath)
 
-        createModel(filepath, user_id)
+        createModel(filepath, user_id, directory_negative_images)
         #funkcija kjer se ustvari model
-        createModel(f'./files/videos/{filename}', user_id)
+        createModel(f'./files/videos/{filename}', user_id, directory_negative_images)
         return jsonify({'status': 'success', 'message': 'Video uploaded successfully'}), 200
     else:
         return jsonify({'status': 'error', 'message': 'Missing video or userId'}), 400
