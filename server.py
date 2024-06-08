@@ -46,10 +46,10 @@ def upload_video():
                 os.makedirs(directory)
             filepath = os.path.join(directory, f'{timestamp}_{filename}')
             video.save(filepath)
-
+            
+        # Fucntion to create the model
         createModel(directory, user_id, directory_negative_images)
-        #funkcija kjer se ustvari model
-        #createModel(f'./files/videos/{filename}', user_id, directory_negative_images)
+        
         return jsonify({'status': 'success', 'message': 'Video uploaded successfully'}), 200
     else:
         return jsonify({'status': 'error', 'message': 'Missing video or userId'}), 400
@@ -68,12 +68,14 @@ def upload_image():
             os.makedirs(directory)
         filepath = os.path.join(directory, f'{timestamp}_{filename}')
         image.save(filepath)
+        
         # Function to check the face
-        hh = identifyFace(filepath, user_id)  # Assuming this function processes the image and returns some result
-        if(hh):
-            return jsonify({'status': 'success', 'message': 'Image uploaded and processed successfully'}), 200
+        res = identifyFace(filepath, user_id)
+        
+        if(res):
+            return jsonify({'status': 'success', 'message': 'Image matches'}), 200
         else:
-            return jsonify({'status': 'err', 'message': 'kr neki'}), 401
+            return jsonify({'status': 'error', 'message': 'Image does not match'}), 401
 
     else:
         return jsonify({'status': 'error', 'message': 'Missing image or userId'}), 400
