@@ -13,7 +13,7 @@ def load_data(data_dir):
     # Gremo skozi vse datoteke v mapi
     for filename in os.listdir(data_dir):
         # Preverimo, ce je datoteka .png
-        if filename.endswith('.png') or filename.endswith('jpg') or filename.endswith('mp4'):
+        if filename.endswith('.png') or filename.endswith('.jpg') or filename.endswith('.mp4'):
             # Kreiramo pot do slike in dodamo v tabelo
             image_path = os.path.join(data_dir, filename)
             image_paths.append(image_path)            
@@ -366,12 +366,19 @@ def createModel(videoPath, userId, directory_negative_images):
     preprocessed_positive_images = preprocess_frames(frames, target_size)
     augmented_positive_images = augment_images(preprocessed_positive_images)
     
-    positive_images = np.concatenate((preprocessed_positive_images, augmented_positive_images), axis=0)  
-      
+    positive_images = []
+    for image in preprocessed_positive_images:
+        positive_images.append(image)
+        
+    for image in augmented_positive_images:
+        positive_images.append(image)
+    positive_images = np.array(positive_images)
+    
     # Združimo pozitivne in negativne slike v podatke za treniranje
     # Pozitivne slike imajo label 1, negativne slike imajo label 0
-    X_train = np.concatenate((positive_images, augmented_negative_images), axis=0)
+    X_train = np.concatenate((positive_images, augmented_negative_images))
     y_train = np.concatenate((np.ones(len(positive_images)), np.zeros(len(augmented_negative_images))))
+
 
     # Model build
     input_shape = (target_size[0], target_size[1], 1)
@@ -395,8 +402,8 @@ def identifyFace(imagePath, userId):
 
     prediction = model.predict(preprocessed_image)[0][0]
 
-
-    if prediction > 0.5:
+    print("prediction: " + str(prediction))
+    if prediction > 0.7:
         return True
     else:
         return False
