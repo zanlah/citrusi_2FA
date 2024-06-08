@@ -69,9 +69,12 @@ def upload_image():
         filepath = os.path.join(directory, f'{timestamp}_{filename}')
         image.save(filepath)
         # Function to check the face
-        identifyFace(directory, user_id)  # Assuming this function processes the image and returns some result
+        hh = identifyFace(filepath, user_id)  # Assuming this function processes the image and returns some result
+        if(hh):
+            return jsonify({'status': 'success', 'message': 'Image uploaded and processed successfully'}), 200
+        else:
+            return jsonify({'status': 'err', 'message': 'kr neki'}), 401
 
-        return jsonify({'status': 'success', 'message': 'Image uploaded and processed successfully'}), 200
     else:
         return jsonify({'status': 'error', 'message': 'Missing image or userId'}), 400
 

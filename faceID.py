@@ -288,6 +288,12 @@ def augment_images(images):
         # Dodamo augmentacijo
         augmented_image = augmentation(image)
         
+        # Select a random augmentation for each image
+        augmentation = random.choice(augmentations)
+        
+        # Dodamo augmentacijo
+        augmented_image = augmentation(image)
+        
         # Dodamo augmentirano sliko v tabelo
         augmented_images.append(augmented_image)
         
