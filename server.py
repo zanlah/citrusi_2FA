@@ -47,9 +47,9 @@ def upload_video():
             filepath = os.path.join(directory, f'{timestamp}_{filename}')
             video.save(filepath)
 
-        createModel(filepath, user_id, directory_negative_images)
+        createModel(directory, user_id, directory_negative_images)
         #funkcija kjer se ustvari model
-        createModel(f'./files/videos/{filename}', user_id, directory_negative_images)
+        #createModel(f'./files/videos/{filename}', user_id, directory_negative_images)
         return jsonify({'status': 'success', 'message': 'Video uploaded successfully'}), 200
     else:
         return jsonify({'status': 'error', 'message': 'Missing video or userId'}), 400
@@ -69,7 +69,7 @@ def upload_image():
         filepath = os.path.join(directory, f'{timestamp}_{filename}')
         image.save(filepath)
         # Function to check the face
-        #identifyFace(save_path, user_id)  # Assuming this function processes the image and returns some result
+        identifyFace(directory, user_id)  # Assuming this function processes the image and returns some result
 
         return jsonify({'status': 'success', 'message': 'Image uploaded and processed successfully'}), 200
     else:
