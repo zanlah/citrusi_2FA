@@ -224,12 +224,14 @@ def clip_pixel_values(brightened_image):
         clipped_image.append(clipped_row)
     return clipped_image
 
+
 def random_brightness(image, max_delta=0.6):
     # Dolocimo svetlost za nakljucni faktor na intervalu [-max_delta, max_delta]
     delta = random_value(-max_delta, max_delta)
     brightened_image = adjust_brightness(image, delta)
     
     return brightened_image
+
 
 #==================#
 # Nakljucni premik #
@@ -239,6 +241,7 @@ def random_translation(image, max_dx=0.2, max_dy=0.2):
     # Izracunamo maksimalno stevilo pikslov za premik
     max_dx_pixels = int(max_dx * width)
     max_dy_pixels = int(max_dy * height)
+
     
     # Nakljucno izberemo stevilo pikslov za premik v x in y smeri
     tx = random.randrange(-max_dx_pixels, max_dx_pixels + 1)
@@ -375,16 +378,17 @@ def createModel(videoPath, userId, directory_negative_images):
 
     # Shranjevanje modela
     model.save(f'./files/{userId}/{userId}_model.h5')
-
     pass
 
 def identifyFace(imagePath, userId):
     target_size = (64, 64)
+
     preprocessed_image = preprocess_frames([imagePath], target_size)
     
     model = tf.keras.models.load_model(f'./files/{userId}/{userId}_model.h5')
 
     prediction = model.predict(preprocessed_image)[0][0]
+
 
     if prediction > 0.5:
         return True
