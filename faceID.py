@@ -13,7 +13,7 @@ def load_data(data_dir):
     # Gremo skozi vse datoteke v mapi
     for filename in os.listdir(data_dir):
         # Preverimo, ce je datoteka .png
-        if filename.endswith('.png') or filename.endswith('mp4'):
+        if filename.endswith('.png') or filename.endswith('jpg') or filename.endswith('mp4'):
             # Kreiramo pot do slike in dodamo v tabelo
             image_path = os.path.join(data_dir, filename)
             image_paths.append(image_path)            
