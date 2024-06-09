@@ -1,11 +1,11 @@
 import unittest
-from my_script import *
+from faceID import *
 
 class TestMyScript(unittest.TestCase):
 
     def test_load_data(self):
         # Define a temporary directory with sample image files
-        data_dir = "./test_data"
+        data_dir = "./tests/test_data"
 
         # Test the load_data function
         image_paths = load_data(data_dir)
@@ -19,7 +19,7 @@ class TestMyScript(unittest.TestCase):
 
     def test_get_images_from_path(self):
         # Define a list of sample image paths
-        image_paths = ["./test_data/image1.png", "./test_data/image2.png"]
+        image_paths = ["./tests/test_data/image1.png", "./tests/test_data/image2.png"]
         
         # Test the get_images_from_path function
         images = get_images_from_path(image_paths, 2)
